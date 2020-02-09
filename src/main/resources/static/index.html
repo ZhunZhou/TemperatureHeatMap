@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!-- /*python3 -m http.server 8000*/
+/*https://stackoverflow.com/questions/33169457/how-to-calculate-in-degree-out-degree-and-weigted-degree-for-force-directed-gra*/
+/*https://stackoverflow.com/questions/20031254/how-can-i-make-double-click-event-on-node-in-d3-js*/ -->
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Temperature Map</title>
+        <script type="text/javascript" src="../lib/d3.v3.min.js"></script>
+        <script src="/webjars/jquery/jquery.min.js"></script>
+        <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+        <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+        <script src="/app.js"></script>
+        <style>
+            div.bar {
+                 display: inline-block;
+                 width: 4px;
+                 height: 75px;
+                 background-color: teal;
+                 margin-right: 2px;
+
+             }
+              .axis path,.axis line {
+                    fill: none;
+                    stroke: black;
+                    shape-rendering: crispEdges;
+                }
+
+                .axis text {
+                    font-family: sans-serif;
+                    font-size: 11px;
+                }
+        </style>
+    </head>
+    <body>
+
+        <div class="col-md-6">
+            <form class="form-inline">
+                <div class="form-group">
+                    <label for="connect">WebSocket connection:</label>
+                    <button id="connect" class="btn btn-default" type="submit">Connect</button>
+                    <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect
+                    </button>
+                </div>
+            </form>
+        </div>
+
+
+        <div class="row">
+          <div class="col-md-12">
+              <table id="conversation" class="table table-striped">
+                  <thead>
+                  <tr>
+                      <th>Greetings</th>
+                  </tr>
+                  </thead>
+                  <tbody id="greetings">
+                  </tbody>
+              </table>
+          </div>
+        </div>
+
+        <script type="text/javascript">
+            var w = 580;
+            var h = 530;
+            var padding =40;
+            var shape_size = 30;
+            var grid_size = (w-2*padding-100)/8;
+
+            //heatmap
+            var svg1 = d3.select('body')
+                        .append('svg')
+                        .attr('height', h)
+                        .attr('width', w)
+                        .attr('id', "heatmap");
+            var division = d3.select('body')
+                             .append('div');
+
+            // Gradient
+            var svg2 = division
+                        .append('svg')
+                        .attr('height', h/4)
+                        .attr('width', w)
+                        .attr('id', "gradient");
+
+            var M = 1;
+            var N = 1;
+
+
+            var symbol = d3.svg.symbol().size(grid_size*(grid_size-5)).type('square');
+  
+            var colorScale1 = d3.scale.quantile().range(["#fff5f0", "#fee0d2", "#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c","#cb181d", "#a50f15", "#67000d"]);
+
+            colorScale1.domain([0,5]);
+            var init_data = [5];
+
+            svg1.selectAll('.heatmap_path')
+                  .data(init_data)
+                  .enter()
+                  .append('path')
+                  .attr('class', 'heatmap_path')
+                  .attr('d', symbol)
+                  .attr('stroke', 'transparent')
+                  .style('opacity,', 1)
+                  .attr('fill', function(d){
+                    return colorScale1(d);
+
+                  })
+                  .attr("transform", function(d, i) {
+                    var y = 65 + (i % M) * 50 ;
+                    var x = 165 + (i / N) * 50;
+                    return "translate(" +x + "," + y + ")"});
+
+            var colors = ["#fff5f0", "#fee0d2", "#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c","#cb181d", "#a50f15", "#67000d"];
+            var ticks = [0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5]
+
+            svg2.selectAll('.color_bar')
+                .data(colors)
+                .enter()
+                .append('path')
+                .attr('class', 'color_bar')
+                .attr('d', symbol)
+                .attr('stroke', 'transparent')
+                .style('opacity', 1)
+                .attr('fill', function(d){
+                  // console.log(d.value);
+                  return d;
+                })
+                .attr("transform", function(d, i) {
+                  var y = 50;
+                  var x = 100 +padding + 50*i;
+                  return "translate(" +x + "," + y + ")"});
+
+
+              svg2.append('text')
+                .text('Voltage')
+                .attr('x', 120)
+                .attr('y', 20)
+                .attr('fill', 'black')
+                .style('font-size', '14')
+                .style('font-weight', 'bold');
+
+
+
+              label = svg2.append('g').attr('class', 'label');
+
+              label.selectAll('.ticks')
+                     .data(ticks)
+                     .enter()
+                     .append('text')
+                     .attr('class','ticks')
+                     .text(function(d){
+                      return d;
+                     })
+                     .attr("transform", function(d, i){
+                      var x = 75 +padding + 50*i;
+                      var y = 85;
+                      return "translate("+x+","+y+")";
+                     })
+                     .attr('text-anchor', "left")
+                     .attr('alignment-baseline',"middle")
+                     .style('opacity', 1);
+
+        </script>
+    </body>
+</html>
